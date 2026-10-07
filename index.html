@@ -6,17 +6,63 @@
   <title>My Travel Map Bangladesh</title>
   <style>
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 70px; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f0f7f4;
       color: #1b4332;
     }
+
+    /* ===== Header ===== */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      background: #1b4332;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      z-index: 100;
+    }
+    .logo { font-size: 18px; font-weight: bold; }
+    .menu-btn {
+      background: #ffd166;
+      color: #1b4332;
+      border: none;
+      border-radius: 10px;
+      font-size: 26px;
+      width: 48px;
+      height: 44px;
+    }
+
+    /* ===== Menu ===== */
+    nav {
+      display: none;
+      position: fixed;
+      top: 60px; left: 0; right: 0;
+      background: #2d6a4f;
+      z-index: 99;
+      padding: 8px 0;
+    }
+    nav.open { display: block; }
+    nav a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      font-size: 19px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+
+    /* ===== Hero ===== */
     .hero {
       background: linear-gradient(160deg, #1b4332, #40916c);
       color: white;
       text-align: center;
-      padding: 48px 20px 56px;
+      padding: 88px 20px 56px;
     }
     .hero .icon { font-size: 56px; }
     .hero h1 { margin: 8px 0; font-size: 28px; }
@@ -29,13 +75,14 @@
       padding: 16px;
       font-size: 18px;
       font-weight: bold;
-      border: none;
       border-radius: 12px;
       text-decoration: none;
       text-align: center;
     }
     .btn-main { background: #ffd166; color: #1b4332; }
     .btn-sub { background: white; color: #1b4332; }
+
+    /* ===== Features ===== */
     .features { padding: 24px 16px; }
     .features h2 { text-align: center; font-size: 22px; }
     .card {
@@ -47,6 +94,7 @@
     }
     .card h3 { margin: 0 0 6px; font-size: 18px; }
     .card p { margin: 0; font-size: 15px; line-height: 1.5; }
+
     footer {
       text-align: center;
       padding: 20px;
@@ -58,7 +106,17 @@
 </head>
 <body>
 
-  <div class="hero">
+  <header>
+    <div class="logo">🗺️ My Travel Map BD</div>
+    <button class="menu-btn" id="menuBtn" aria-label="মেনু">☰</button>
+  </header>
+
+  <nav id="menu">
+    <a href="#top">🏠 হোম</a>
+    <a href="#features">✨ ফিচারসমূহ</a>
+  </nav>
+
+  <div class="hero" id="top">
     <div class="icon">🗺️</div>
     <h1>My Travel Map Bangladesh</h1>
     <p>বাংলাদেশের ৬৪ জেলা ঘুরে দেখুন, আপনার ভ্রমণের ম্যাপ তৈরি করুন এবং পরবর্তী ভ্রমণের পরিকল্পনা করুন।</p>
@@ -91,6 +149,21 @@
   </div>
 
   <footer>© My Travel Map Bangladesh</footer>
+
+  <script>
+    var btn = document.getElementById('menuBtn');
+    var menu = document.getElementById('menu');
+
+    btn.addEventListener('click', function () {
+      var open = menu.classList.toggle('open');
+      btn.textContent = open ? '✕' : '☰';
+    });
+
+    menu.addEventListener('click', function () {
+      menu.classList.remove('open');
+      btn.textContent = '☰';
+    });
+  </script>
 
 </body>
 </html>
