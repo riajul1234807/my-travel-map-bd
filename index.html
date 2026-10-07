@@ -5,28 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Travel Map Bangladesh</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f0f7f4;
       color: #1b4332;
+    }
+    .hero {
+      background: linear-gradient(160deg, #1b4332, #40916c);
+      color: white;
+      text-align: center;
+      padding: 48px 20px 56px;
+    }
+    .hero .icon { font-size: 56px; }
+    .hero h1 { margin: 8px 0; font-size: 28px; }
+    .hero p { font-size: 17px; line-height: 1.6; margin: 8px 0 24px; }
+    .btn {
+      display: block;
+      width: 100%;
+      max-width: 320px;
+      margin: 12px auto;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      text-decoration: none;
       text-align: center;
     }
-    h1 {
-      background: #2d6a4f;
-      color: white;
-      margin: 0;
-      padding: 24px 12px;
-      font-size: 24px;
+    .btn-main { background: #ffd166; color: #1b4332; }
+    .btn-sub { background: white; color: #1b4332; }
+    .features { padding: 24px 16px; }
+    .features h2 { text-align: center; font-size: 22px; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
-    p {
-      font-size: 18px;
+    .card h3 { margin: 0 0 6px; font-size: 18px; }
+    .card p { margin: 0; font-size: 15px; line-height: 1.5; }
+    footer {
+      text-align: center;
       padding: 20px;
+      font-size: 14px;
+      background: #1b4332;
+      color: white;
     }
   </style>
 </head>
 <body>
-  <h1>🗺️ My Travel Map Bangladesh</h1>
-  <p>স্বাগতম! আমার ওয়েবসাইট তৈরি শুরু হলো।</p>
+
+  <div class="hero">
+    <div class="icon">🗺️</div>
+    <h1>My Travel Map Bangladesh</h1>
+    <p>বাংলাদেশের ৬৪ জেলা ঘুরে দেখুন, আপনার ভ্রমণের ম্যাপ তৈরি করুন এবং পরবর্তী ভ্রমণের পরিকল্পনা করুন।</p>
+    <a class="btn btn-main" href="#features">ম্যাপ দেখুন</a>
+    <a class="btn btn-sub" href="#features">লগইন করুন</a>
+  </div>
+
+  <div class="features" id="features">
+    <h2>এখানে আপনি যা পাবেন</h2>
+
+    <div class="card">
+      <h3>🇧🇩 ৬৪ জেলার ম্যাপ</h3>
+      <p>কোন জেলা ঘুরেছেন, কোথায় যেতে চান, তা ম্যাপে রং দিয়ে চিহ্নিত করুন।</p>
+    </div>
+
+    <div class="card">
+      <h3>🌍 বিশ্ব ভ্রমণ ম্যাপ</h3>
+      <p>যে দেশগুলো ভ্রমণ করেছেন সেগুলো নির্বাচন করে নিজের পরিসংখ্যান দেখুন।</p>
+    </div>
+
+    <div class="card">
+      <h3>🧳 ভ্রমণ পরিকল্পনা</h3>
+      <p>রুট, বাজেট ও খরচের হিসাব করে পরবর্তী ভ্রমণ সাজান।</p>
+    </div>
+
+    <div class="card">
+      <h3>📥 ম্যাপ ডাউনলোড</h3>
+      <p>আপনার ভ্রমণ ম্যাপ ছবি বা PDF হিসেবে সংরক্ষণ ও শেয়ার করুন।</p>
+    </div>
+  </div>
+
+  <footer>© My Travel Map Bangladesh</footer>
+
 </body>
 </html>
