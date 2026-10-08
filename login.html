@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>লগইন - My Travel Map Bangladesh</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f7f4;
+      color: #1b4332;
+    }
+    .top {
+      background: #1b4332;
+      color: white;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .top a { color: #ffd166; text-decoration: none; font-weight: bold; }
+    .box {
+      max-width: 420px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab {
+      flex: 1;
+      padding: 14px;
+      font-size: 17px;
+      font-weight: bold;
+      border: 2px solid #2d6a4f;
+      background: white;
+      color: #2d6a4f;
+      border-radius: 10px;
+    }
+    .tab.active { background: #2d6a4f; color: white; }
+    label { display: block; margin: 12px 0 6px; font-weight: bold; }
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 17px;
+      border: 2px solid #b7d4c4;
+      border-radius: 10px;
+    }
+    .go {
+      width: 100%;
+      margin-top: 18px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      background: #ffd166;
+      color: #1b4332;
+      border: none;
+      border-radius: 12px;
+    }
+    .link {
+      background: none;
+      border: none;
+      color: #2d6a4f;
+      text-decoration: underline;
+      font-size: 16px;
+      margin-top: 14px;
+      padding: 8px;
+    }
+    .msg {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      display: none;
+    }
+    .msg.err { display: block; background: #ffe3e3; color: #b00020; }
+    .msg.ok { display: block; background: #d8f3dc; color: #1b4332; }
+    .hidden { display: none; }
+    .welcome { text-align: center; }
+    .welcome h2 { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <div>🗺️ My Travel Map BD</div>
+    <a href="index.html">← হোম</a>
+  </div>
+
+  <div class="box">
+
+    <div class="card" id="formCard">
+      <div class="tabs">
+        <button class="tab active" id="tabLogin">লগইন</button>
+        <button class="tab" id="tabSignup">নতুন অ্যাকাউন্ট</button>
+      </div>
+
+      <div id="nameRow" class="hidden">
+        <label for="name">আপনার নাম</label>
+        <input type="text" id="name" placeholder="যেমন: রিয়াজুল">
+      </div>
+
+      <label for="email">ইমেইল</label>
+      <input type="email" id="email" placeholder="example@gmail.com">
+
+      <div id="passRow">
+        <label for="password">পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label>
+        <input type="password" id="password" placeholder="পাসওয়ার্ড লিখুন">
+      </div>
+
+      <button class="go" id="goBtn">লগইন করুন</button>
+      <div style="text-align:center">
+        <button class="link" id="forgotBtn">পাসওয়ার্ড ভুলে গেছেন?</button>
+      </div>
+
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <div class="card welcome hidden" id="userCard">
+      <h2 id="welcomeText">স্বাগতম!</h2>
+      <p id="userEmail"></p>
+      <button class="go" id="logoutBtn">লগআউট</button>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged,
+      sendPasswordResetEmail,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCwk4TYMysCQH7ALCrwRoxktLzpu8cWHbk",
+      authDomain: "my-travel-map-bd.firebaseapp.com",
+      projectId: "my-travel-map-bd",
+      storageBucket: "my-travel-map-bd.firebasestorage.app",
+      messagingSenderId: "16368257472",
+      appId: "1:16368257472:web:c0fe502ab876dc5b99e025"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const $ = (id) => document.getElementById(id);
+    let mode = "login";
+
+    function show(text, type) {
+      const m = $("msg");
+      m.textContent = text;
+      m.className = "msg " + type;
+    }
+
+    function errorText(code) {
+      const map = {
+        "auth/invalid-email": "ইমেইলটি সঠিক নয়।",
+        "auth/missing-email": "ইমেইল লিখুন।",
+        "auth/missing-password": "পাসওয়ার্ড লিখুন।",
+        "auth/weak-password": "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।",
+        "auth/email-already-in-use": "এই ইমেইলে আগেই অ্যাকাউন্ট আছে। লগইন করুন।",
+        "auth/invalid-credential": "ইমেইল বা পাসওয়ার্ড ভুল।",
+        "auth/user-not-found": "এই ইমেইলে কোনো অ্যাকাউন্ট নেই।",
+        "auth/wrong-password": "পাসওয়ার্ড ভুল।",
+        "auth/too-many-requests": "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।",
+        "auth/network-request-failed": "ইন্টারনেট সংযোগ পরীক্ষা করুন।",
+        "auth/unauthorized-domain": "এই ওয়েবসাইটের ঠিকানা Firebase-এ অনুমোদিত নয়।"
+      };
+      return map[code] || ("সমস্যা হয়েছে: " + code);
+    }
+
+    function setMode(m) {
+      mode = m;
+      $("msg").className = "msg";
+      if (m === "login") {
+        $("tabLogin").classList.add("active");
+        $("tabSignup").classList.remove("active");
+        $("nameRow").classList.add("hidden");
+        $("goBtn").textContent = "লগইন করুন";
+        $("forgotBtn").style.display = "";
+      } else {
+        $("tabSignup").classList.add("active");
+        $("tabLogin").classList.remove("active");
+        $("nameRow").classList.remove("hidden");
+        $("goBtn").textContent = "অ্যাকাউন্ট খুলুন";
+        $("forgotBtn").style.display = "none";
+      }
+    }
+
+    $("tabLogin").addEventListener("click", () => setMode("login"));
+    $("tabSignup").addEventListener("click", () => setMode("signup"));
+
+    $("goBtn").addEventListener("click", async () => {
+      const email = $("email").value.trim();
+      const password = $("password").value;
+      const name = $("name").value.trim();
+      $("goBtn").disabled = true;
+      try {
+        if (mode === "signup") {
+          if (!name) { show("আপনার নাম লিখুন।", "err"); return; }
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+          await updateProfile(cred.user, { displayName: name });
+          showUser(cred.user);
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } catch (e) {
+        show(errorText(e.code), "err");
+      } finally {
+        $("goBtn").disabled = false;
+      }
+    });
+
+    $("forgotBtn").addEventListener("click", async () => {
+      const email = $("email").value.trim();
+      if (!email) { show("আগে উপরে আপনার ইমেইল লিখুন, তারপর এই বাটন চাপুন।", "err"); return; }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        show("পাসওয়ার্ড বদলানোর লিংক ইমেইলে পাঠানো হয়েছে। Spam ফোল্ডারও দেখুন।", "ok");
+      } catch (e) {
+        show(errorText(e.code), "err");
+      }
+    });
+
+    $("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+    });
+
+    function showUser(user) {
+      $("formCard").classList.add("hidden");
+      $("userCard").classList.remove("hidden");
+      $("welcomeText").textContent = "স্বাগতম, " + (user.displayName || "বন্ধু") + "! 🎉";
+      $("userEmail").textContent = user.email;
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        showUser(user);
+      } else {
+        $("userCard").classList.add("hidden");
+        $("formCard").classList.remove("hidden");
+      }
+    });
+  </script>
+
+</body>
+</html>
