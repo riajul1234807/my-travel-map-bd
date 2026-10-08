@@ -30,22 +30,35 @@
       text-align: center;
     }
     .avatar {
-      width: 96px;
-      height: 96px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
       background: #2d6a4f;
       color: white;
-      font-size: 44px;
+      font-size: 54px;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 12px;
+      overflow: hidden;
+      border: 4px solid #ffd166;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-btn {
+      display: inline-block;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #2d6a4f;
+      color: white;
+      border-radius: 10px;
+      margin-bottom: 8px;
     }
     h2 { margin: 6px 0; }
     .email { color: #52796f; margin: 0 0 18px; word-break: break-all; }
-    label { display: block; text-align: left; margin: 12px 0 6px; font-weight: bold; }
-    input {
+    label.lbl { display: block; text-align: left; margin: 12px 0 6px; font-weight: bold; }
+    input[type=text] {
       width: 100%;
       padding: 14px;
       font-size: 17px;
@@ -99,10 +112,14 @@
 
     <div class="card hidden" id="profileCard">
       <div class="avatar" id="avatar">?</div>
+
+      <label class="photo-btn" for="photoInput">📷 ছবি বদলান</label>
+      <input type="file" id="photoInput" accept="image/*" class="hidden">
+
       <h2 id="nameShow">নাম</h2>
       <p class="email" id="emailShow"></p>
 
-      <label for="nameInput">নাম বদলান</label>
+      <label class="lbl" for="nameInput">নাম বদলান</label>
       <input type="text" id="nameInput" placeholder="আপনার নাম">
 
       <button class="go" id="saveBtn">নাম Save করুন</button>
@@ -120,6 +137,12 @@
       signOut,
       updateProfile
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCwk4TYMysCQH7ALCrwRoxktLzpu8cWHbk",
@@ -132,6 +155,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
     const $ = (id) => document.getElementById(id);
 
     function show(text, type) {
@@ -140,15 +164,28 @@
       m.className = "msg " + type;
     }
 
-    function fill(user) {
+    function showAvatar(user, photo) {
       const name = user.displayName || "বন্ধু";
-      $("nameShow").textContent = name;
-      $("emailShow").textContent = user.email;
-      $("nameInput").value = user.displayName || "";
-      $("avatar").textContent = name.charAt(0).toUpperCase();
+      const av = $("avatar");
+      if (photo) {
+        av.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = photo;
+        av.appendChild(img);
+      } else {
+        av.textContent = name.charAt(0).toUpperCase();
+      }
     }
 
-    onAuthStateChanged(auth, (user) => {
+    function fill(user) {
+      $("nameShow").textContent = user.displayName || "বন্ধু";
+      $("emailShow").textContent = user.email;
+      $("nameInput").value = user.displayName || "";
+    }
+
+    let currentPhoto = "";
+
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
         return;
@@ -156,6 +193,62 @@
       $("loading").classList.add("hidden");
       $("profileCard").classList.remove("hidden");
       fill(user);
+      showAvatar(user, "");
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists() && snap.data().photo) {
+          currentPhoto = snap.data().photo;
+          showAvatar(user, currentPhoto);
+        }
+      } catch (e) {
+        show("ছবি লোড করা যায়নি: " + e.code, "err");
+      }
+    });
+
+    // ছবি ছোট করার ফাংশন (৩০০x৩০০, মাঝখান থেকে কাটা)
+    function resizeImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("read"));
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => reject(new Error("img"));
+          img.onload = () => {
+            const size = 300;
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext("2d");
+            const min = Math.min(img.width, img.height);
+            const sx = (img.width - min) / 2;
+            const sy = (img.height - min) / 2;
+            ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+            resolve(canvas.toDataURL("image/jpeg", 0.8));
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    $("photoInput").addEventListener("change", async (ev) => {
+      const file = ev.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        show("শুধু ছবি বেছে নিন।", "err");
+        return;
+      }
+      show("ছবি আপলোড হচ্ছে...", "ok");
+      try {
+        const data = await resizeImage(file);
+        await setDoc(doc(db, "users", auth.currentUser.uid), { photo: data }, { merge: true });
+        currentPhoto = data;
+        showAvatar(auth.currentUser, data);
+        show("ছবি Save হয়েছে ✅", "ok");
+      } catch (e) {
+        show("ছবি Save হয়নি: " + (e.code || e.message), "err");
+      }
+      ev.target.value = "";
     });
 
     $("saveBtn").addEventListener("click", async () => {
@@ -165,6 +258,7 @@
       try {
         await updateProfile(auth.currentUser, { displayName: newName });
         fill(auth.currentUser);
+        showAvatar(auth.currentUser, currentPhoto);
         show("নাম Save হয়েছে ✅", "ok");
       } catch (e) {
         show("সমস্যা হয়েছে: " + e.code, "err");
